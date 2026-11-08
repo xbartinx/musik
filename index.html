@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<script>
+window.onerror=function(m,s,l,c){if(/^Script error\.?$/.test(String(m))&&!l)return true;try{var d=document.getElementById('err');if(!d){d=document.createElement('pre');d.id='err';
+d.onclick=function(){d.remove()};d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99;margin:0;padding:14px 12px 30px;background:#a00;color:#fff;font:14px Menlo,monospace;white-space:pre-wrap';
+(document.body||document.documentElement).appendChild(d);}d.textContent+='FEHLER: '+m+' (Zeile '+l+':'+c+')\n';
+var b=document.getElementById('boot');if(b)b.remove();}catch(e){}};
+window.addEventListener('unhandledrejection',function(e){window.onerror('Promise: '+(e.reason&&e.reason.message||e.reason),'',0,0);});
+</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MUSIK">
+<meta name="theme-color" content="#0000aa">
+<title>MUSIK.EXE</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{--bg:#0000aa;--fg:#aaaaaa;--hi:#fff;--cy:#00aaaa;--lcy:#55ffff;--ye:#ffff55;--rd:#ff5555;--gr:#55ff55;--dim:#6a6ac8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000}
+body{font-family:'VT323',ui-monospace,Menlo,monospace;font-size:21px;line-height:1.15;color:var(--fg);-webkit-text-size-adjust:100%;overflow:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen{display:flex;flex-direction:column;height:100%;max-width:560px;margin:0 auto;background:var(--bg)}
+.hidden{display:none!important}
+.bar{background:var(--fg);color:#000;padding:2px 8px;display:flex;justify-content:space-between;white-space:nowrap;gap:8px}
+.bar span:first-child{overflow:hidden;text-overflow:ellipsis}
+.menu{display:flex;background:#000;padding:2px 4px;gap:2px}
+.menu button{flex:1;font:inherit;font-size:19px;background:#000;color:var(--fg);border:0;padding:5px 0;cursor:pointer;border-radius:0}
+.menu button.on{background:var(--cy);color:#000}
+.menu button b{color:var(--ye);font-weight:normal}
+.menu button.on b{color:#000}
+fieldset{margin:4px 6px 2px;border:4px double var(--hi);padding:2px 4px 4px;min-width:0;min-height:0}
+legend{color:var(--hi);padding:0 6px;white-space:nowrap;overflow:hidden;max-width:90%}
+#panel{flex:1;display:flex;flex-direction:column}
+#list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
+.item{display:flex;align-items:center;gap:8px;padding:3px 4px;cursor:pointer;min-height:44px}
+.item:active,.item.sel{background:var(--cy);color:#000}
+.item:active .sub,.item.sel .sub{color:#003}
+.item img,.item .ph{width:40px;height:40px;flex:none;image-rendering:pixelated;background:#000;object-fit:cover}
+.ph{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:24px}
+.item .txt{flex:1;min-width:0}
+.item .t{color:var(--hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item.playing .t{color:var(--ye)}
+.item .sub{color:var(--dim);font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .num{width:2em;text-align:right;color:var(--dim);flex:none}
+.item .q{flex:none;font:inherit;background:none;border:1px solid var(--dim);color:var(--fg);width:34px;height:30px;cursor:pointer;border-radius:0}
+.head{display:flex;gap:10px;padding:6px 4px;align-items:flex-end}
+.head img{width:132px;height:132px;image-rendering:pixelated;background:#000;flex:none;border:2px solid #000;box-shadow:4px 4px 0 #000;object-fit:cover}
+.head .info{flex:1;min-width:0}
+.head .t{color:var(--hi);font-size:24px;line-height:1.05;max-height:3.2em;overflow:hidden}
+.head .sub{color:var(--lcy);font-size:18px}
+.btn{font:inherit;font-size:20px;border:0;border-radius:0;background:#aaa;color:#000;box-shadow:4px 4px 0 #000;padding:3px 10px;cursor:pointer;margin:6px 6px 0 0}
+.btn:active{transform:translate(4px,4px);box-shadow:none}
+.btn.g{background:#00aa00;color:#fff}.btn.c{background:var(--cy)}.btn.r{background:#aa0000;color:#fff}
+.msg{padding:10px 6px;color:var(--fg);white-space:pre-wrap}
+.msg b{color:var(--ye);font-weight:normal}
+.msg.e{color:var(--rd)}
+#search{display:flex;padding:4px;gap:6px}
+#search input{flex:1;min-width:0;font:inherit;font-size:20px;background:#000;color:var(--hi);border:0;padding:6px 8px;border-radius:0;outline:0}
+/* Player */
+#np{flex:none;margin:2px 6px 4px}
+.np{display:flex;gap:8px;align-items:center}
+.np img,.np .ph{width:58px;height:58px;image-rendering:pixelated;background:#000;flex:none;object-fit:cover}
+.np .txt{flex:1;min-width:0}
+.np .t{color:var(--ye);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np .sub{color:var(--lcy);font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog{font-size:17px;color:var(--fg);white-space:nowrap;display:flex;gap:6px;align-items:center;margin-top:2px}
+.prog .barbox{flex:1;height:10px;background:#000;position:relative;cursor:pointer}
+.prog .fill{position:absolute;left:0;top:0;bottom:0;background:var(--lcy)}
+.ctrl{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}
+.ctrl button{font:inherit;font-size:22px;border:0;border-radius:0;background:#aaa;color:#000;box-shadow:4px 4px 0 #000;padding:6px 0;cursor:pointer}
+.ctrl button:active{transform:translate(4px,4px);box-shadow:none}
+.ctrl button.on{background:var(--gr)}
+.ctrl button.big{background:var(--cy)}
+#dev{font-size:16px;color:var(--dim);text-align:right;margin-top:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Setup */
+#setup .wrap{flex:1;overflow-y:auto;padding:4px 10px 20px}
+#setup ol{padding-left:2em;margin:6px 0}
+#setup a{word-break:break-all}
+#setup li{margin-bottom:6px}
+#setup code{color:var(--ye);word-break:break-all}
+#setup input{width:100%;font:inherit;font-size:20px;background:#000;color:var(--hi);border:0;padding:6px 8px;margin-top:4px;border-radius:0}
+#setup a{color:var(--lcy)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#aa0000;color:#fff;padding:6px 12px;z-index:20;max-width:92%;font-size:19px;box-shadow:4px 4px 0 #000}
+.toast.ok{background:#00aa00}
+</style>
+</head>
+<body>
+<!-- Einrichtung -->
+<div class="screen hidden" id="setup">
+  <div class="bar"><span>MUSIK.EXE - EINRICHTUNG</span><span class="clock">--:--</span></div>
+  <div class="wrap">
+    <fieldset><legend>[ SPOTIFY VERBINDEN ]</legend>
+    <div class="msg" style="padding:4px 2px">Einmalig nötig (ca. 5 Min.). Du brauchst <b>Spotify Premium</b>.</div>
+    <ol>
+      <li>Öffne <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a> und melde dich mit deinem Spotify-Konto an.</li>
+      <li>Tippe <b>Create app</b>. Name & Beschreibung: beliebig, z.B. „MUSIK.EXE“.</li>
+      <li>Bei <b>Redirect URIs</b> genau diese Adresse eintragen und <b>Add</b> tippen:<br><code id="ruri"></code><br><button class="btn c" id="copyUri">KOPIEREN</button></li>
+      <li>Bei „Which API/SDKs“ <b>Web API</b> anhaken, Bedingungen bestätigen, <b>Save</b>.</li>
+      <li>In der App unter <b>Settings</b> die <b>Client ID</b> kopieren und hier einfügen:</li>
+    </ol>
+    <input id="cid" placeholder="Client ID" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button class="btn g" id="connect">VERBINDEN</button>
+    <div class="msg" id="setupMsg"></div>
+    <details style="margin-top:8px"><summary style="color:var(--dim)">Code aus Safari einfügen</summary>
+      <div class="msg" style="padding:4px 0">Falls die Anmeldung in Safari statt in der App gelandet ist: dort den Code kopieren und hier einfügen.</div>
+      <input id="tokenIn" placeholder="MUSIK-CODE…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="btn c" id="tokenBtn">ÜBERNEHMEN</button>
+    </details>
+    </fieldset>
+  </div>
+</div>
+
+<!-- Anmeldung abgeschlossen, aber falscher Kontext (Safari statt App) -->
+<div class="screen hidden" id="done">
+  <div class="bar"><span>MUSIK.EXE</span><span class="clock">--:--</span></div>
+  <fieldset><legend>[ ANGEMELDET ]</legend>
+    <div class="msg"><b>Verbindung steht.</b>
+
+Öffne jetzt MUSIK vom Home-Bildschirm. Erkennt sie dich dort nicht, kopiere diesen Code und füge ihn in der App unter „Code aus Safari einfügen“ ein:</div>
+    <div class="msg"><code id="codeOut" style="color:var(--ye);word-break:break-all;font-size:16px"></code></div>
+    <button class="btn c" id="copyCode">CODE KOPIEREN</button>
+    <button class="btn g" id="goApp">HIER WEITER</button>
+  </fieldset>
+</div>
+
+<!-- Haupt -->
+<div class="screen hidden" id="main">
+  <div class="bar"><span id="who">MUSIK.EXE</span><span class="clock">--:--</span></div>
+  <div class="menu" id="menu">
+    <button data-tab="pl" class="on"><b>P</b>laylists</button>
+    <button data-tab="al"><b>A</b>lben</button>
+    <button data-tab="tr"><b>T</b>itel</button>
+    <button data-tab="se"><b>S</b>uche</button>
+  </div>
+  <fieldset id="panel">
+    <legend id="legend">[ PLAYLISTS ]</legend>
+    <form id="search" class="hidden" autocomplete="off"><input id="q" placeholder="Suche: Titel, Album, Künstler…" enterkeyhint="search" autocorrect="off"><button class="btn c" style="margin:0">OK</button></form>
+    <div id="list"></div>
+  </fieldset>
+  <fieldset id="np">
+    <legend>[ LÄUFT ]</legend>
+    <div class="np"><div class="ph" id="npImgPh">♪</div><img id="npImg" class="hidden" alt="">
+      <div class="txt"><div class="t" id="npT">Nichts läuft</div><div class="sub" id="npA">Öffne Spotify einmal & spiele etwas</div>
+        <div class="prog"><span id="npPos">0:00</span><div class="barbox" id="npBar"><div class="fill" id="npFill" style="width:0"></div></div><span id="npDur">0:00</span></div>
+      </div></div>
+    <div class="ctrl">
+      <button id="bShuf" title="Zufall">≈</button>
+      <button id="bPrev">|◄</button>
+      <button id="bPlay" class="big">►</button>
+      <button id="bNext">►|</button>
+      <button id="bRep" title="Wiederholen">↻</button>
+    </div>
+    <div id="dev">GERÄT: –</div>
+  </fieldset>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative user-library-read';
+const REDIRECT = location.origin + location.pathname.replace(/index\.html$/, '');
+const LS = {cid: 'musik.cid', tok: 'musik.tok', ver: 'musik.ver', pix: 'musik.pix'};
+function lget(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lset(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+let tok = null; try { tok = JSON.parse(lget(LS.tok) || 'null'); } catch (e) {}
+let me = null;
+const pixel = lget(LS.pix) !== '0';
+
+/* ---------- kleine Helfer ---------- */
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function toast(msg, ok) { const t = el('div', 'toast' + (ok ? ' ok' : ''), msg); document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+function mmss(ms) { ms = Math.max(0, ms | 0); const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function img(images, big) {
+  if (!images || !images.length) return null;
+  const sorted = images.slice().sort((a, b) => (a.width || 0) - (b.width || 0));
+  if (big) return pixel ? sorted[0].url : sorted[sorted.length - 1].url;
+  return sorted[0].url;
+}
+function show(id) { ['setup', 'done', 'main'].forEach(s => $(s).classList.toggle('hidden', s !== id)); }
+function hhmm(d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+setInterval(() => document.querySelectorAll('.clock').forEach(c => c.textContent = hhmm(new Date())), 10000);
+document.querySelectorAll('.clock').forEach(c => c.textContent = hhmm(new Date()));
+async function copy(text) { try { await navigator.clipboard.writeText(text); toast('Kopiert.', true); } catch (e) { toast('Kopieren nicht möglich – bitte markieren.'); } }
+function b64url(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+
+/* ---------- Anmeldung (PKCE, ohne Server) ---------- */
+async function login() {
+  const cid = ($('cid').value || lget(LS.cid) || '').trim();
+  if (!/^[0-9a-f]{32}$/i.test(cid)) { $('setupMsg').className = 'msg e'; $('setupMsg').textContent = 'Das sieht nicht nach einer Client ID aus (32 Zeichen, 0-9 und a-f).'; return; }
+  lset(LS.cid, cid);
+  const rnd = new Uint8Array(48); crypto.getRandomValues(rnd);
+  const verifier = b64url(rnd);
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+  lset(LS.ver, verifier);
+  // Client-ID & Verifier reisen zusätzlich im state mit, falls iOS die Rückkehr in Safari statt in der App öffnet
+  const state = b64url(new TextEncoder().encode(JSON.stringify({c: cid, v: verifier})));
+  const p = new URLSearchParams({response_type: 'code', client_id: cid, scope: SCOPES, redirect_uri: REDIRECT,
+    code_challenge_method: 'S256', code_challenge: challenge, state});
+  location.href = 'https://accounts.spotify.com/authorize?' + p.toString();
+}
+async function tokenRequest(params) {
+  const r = await fetch('https://accounts.spotify.com/api/token', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(params)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error_description || j.error || ('HTTP ' + r.status));
+  return j;
+}
+function saveTok(j, cid) {
+  tok = {a: j.access_token, r: j.refresh_token || (tok && tok.r), e: Date.now() + (j.expires_in - 60) * 1000, c: cid || (tok && tok.c) || lget(LS.cid)};
+  lset(LS.tok, JSON.stringify(tok));
+}
+async function handleCallback() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return false;
+  history.replaceState(null, '', location.pathname);
+  if (q.has('error')) { show('setup'); $('setupMsg').className = 'msg e'; $('setupMsg').textContent = 'Anmeldung abgebrochen: ' + q.get('error'); return true; }
+  let st = {}; try { st = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(q.get('state').replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)))); } catch (e) {}
+  const cid = lget(LS.cid) || st.c, verifier = lget(LS.ver) || st.v;
+  try {
+    const j = await tokenRequest({grant_type: 'authorization_code', code: q.get('code'), redirect_uri: REDIRECT, client_id: cid, code_verifier: verifier});
+    lset(LS.cid, cid); saveTok(j, cid); lset(LS.ver, null);
+    const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+    if (!standalone && /iPhone|iPad/.test(navigator.userAgent)) {
+      $('codeOut').textContent = 'MUSIK-' + b64url(new TextEncoder().encode(JSON.stringify({c: cid, r: tok.r})));
+      show('done'); return true;
+    }
+  } catch (e) { show('setup'); $('setupMsg').className = 'msg e'; $('setupMsg').textContent = 'Fehler bei der Anmeldung: ' + e.message + '\nStimmt die Redirect URI genau?'; return true; }
+  return false;
+}
+async function importCode(code) {
+  try {
+    const s = code.trim().replace(/^MUSIK-/, '');
+    const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))));
+    lset(LS.cid, o.c); tok = {a: null, r: o.r, e: 0, c: o.c}; await refresh(); start();
+  } catch (e) { $('setupMsg').className = 'msg e'; $('setupMsg').textContent = 'Code ungültig oder abgelaufen. Bitte neu verbinden.'; }
+}
+let refreshing = null;
+async function refresh() {
+  if (!tok || !tok.r) throw new Error('nicht angemeldet');
+  if (!refreshing) refreshing = tokenRequest({grant_type: 'refresh_token', refresh_token: tok.r, client_id: tok.c || lget(LS.cid)})
+    .then(j => saveTok(j)).finally(() => { refreshing = null; });
+  return refreshing;
+}
+function logout() { tok = null; lset(LS.tok, null); show('setup'); }
+
+/* ---------- Web API ---------- */
+let deviceId = null;
+async function api(path, opt = {}, retry = true) {
+  if (!tok) throw new Error('nicht angemeldet');
+  if (!tok.a || Date.now() > tok.e) { try { await refresh(); } catch (e) { logout(); throw e; } }
+  const r = await fetch('https://api.spotify.com/v1' + path, {method: opt.method || 'GET',
+    headers: Object.assign({Authorization: 'Bearer ' + tok.a}, opt.body ? {'Content-Type': 'application/json'} : {}),
+    body: opt.body ? JSON.stringify(opt.body) : undefined});
+  if (r.status === 401 && retry) { await refresh(); return api(path, opt, false); }
+  if (r.status === 429 && retry) { await new Promise(res => setTimeout(res, (parseInt(r.headers.get('Retry-After') || '2', 10)) * 1000)); return api(path, opt, false); }
+  if (r.status === 204 || r.status === 202) return null;
+  const txt = await r.text(); let j = null; try { j = txt ? JSON.parse(txt) : null; } catch (e) {}
+  if (!r.ok) { const err = new Error((j && j.error && (j.error.message || j.error)) || ('HTTP ' + r.status)); err.status = r.status; err.reason = j && j.error && j.error.reason; throw err; }
+  return j;
+}
+async function pages(path, max) {
+  let out = [], url = path;
+  while (url && out.length < max) { const j = await api(url); out = out.concat(j.items || []); url = j.next ? j.next.replace('https://api.spotify.com/v1', '') : null; }
+  return out;
+}
+
+/* ---------- Ansicht: Listen ---------- */
+let tab = 'pl', cache = {}, nowUri = null, stack = [];
+const L = () => $('list');
+function legend(t) { $('legend').textContent = '[ ' + t + ' ]'; }
+function msg(text, err) { L().textContent = ''; L().appendChild(el('div', 'msg' + (err ? ' e' : ''), text)); }
+function row({image, title, sub, num, onClick, uri, queue}) {
+  const r = el('div', 'item');
+  if (num != null) r.appendChild(el('span', 'num', num));
+  else if (image) { const i = el('img'); i.loading = 'lazy'; i.src = image; i.alt = ''; r.appendChild(i); }
+  else r.appendChild(el('div', 'ph', '♪'));
+  const t = el('div', 'txt'); t.append(el('div', 't', title), el('div', 'sub', sub || '')); r.appendChild(t);
+  if (queue) { const q = el('button', 'q', '+'); q.title = 'Zur Warteschlange'; q.onclick = e => { e.stopPropagation(); queueAdd(queue); }; r.appendChild(q); }
+  if (uri) r.dataset.uri = uri;
+  if (uri && uri === nowUri) r.classList.add('playing');
+  r.onclick = onClick; L().appendChild(r); return r;
+}
+function artists(a) { return (a || []).map(x => x.name).join(', '); }
+async function openTab(t) {
+  tab = t; stack = [];
+  document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('search').classList.toggle('hidden', t !== 'se');
+  if (t === 'se') { legend('SUCHE'); if (!cache.se) msg('Suchbegriff eingeben…'); else renderSearch(cache.se); return; }
+  const names = {pl: 'PLAYLISTS', al: 'ALBEN', tr: 'LIEBLINGSSONGS'}; legend(names[t]);
+  if (cache[t]) return renderTab(t);
+  msg('Lade…');
+  try {
+    if (t === 'pl') cache.pl = (await pages('/me/playlists?limit=50', 300)).filter(Boolean);
+    if (t === 'al') cache.al = (await pages('/me/albums?limit=50', 300)).map(x => x.album).filter(Boolean);
+    if (t === 'tr') cache.tr = (await pages('/me/tracks?limit=50', 200)).map(x => x.track).filter(Boolean);
+    if (tab === t) renderTab(t);
+  } catch (e) { msg('Fehler: ' + e.message, true); }
+}
+function renderTab(t) {
+  L().textContent = ''; L().scrollTop = 0;
+  if (t === 'pl') {
+    row({title: 'Lieblingssongs', sub: 'Deine gespeicherten Titel', onClick: () => openTab('tr')});
+    cache.pl.forEach(p => row({image: img(p.images), title: p.name, sub: 'von ' + ((p.owner && p.owner.display_name) || '?'), uri: p.uri, onClick: () => openPlaylist(p)}));
+  }
+  if (t === 'al') {
+    if (!cache.al.length) msg('Keine gespeicherten Alben.');
+    cache.al.forEach(a => row({image: img(a.images), title: a.name, sub: artists(a.artists) + (a.release_date ? ' · ' + a.release_date.slice(0, 4) : ''), uri: a.uri, onClick: () => openAlbum(a.id)}));
+  }
+  if (t === 'tr') {
+    if (!cache.tr.length) msg('Keine Lieblingssongs.');
+    const top = el('div'); top.style.padding = '2px 4px 6px';
+    const pb = el('button', 'btn g', '► ALLE ABSPIELEN'); pb.onclick = () => play({uris: cache.tr.slice(0, 100).map(x => x.uri)});
+    const sb = el('button', 'btn c', '≈ ZUFALL'); sb.onclick = async () => { await api('/me/player/shuffle?state=true' + dev(), {method: 'PUT'}).catch(() => {}); play({uris: cache.tr.slice(0, 100).map(x => x.uri)}); };
+    top.append(pb, sb); L().appendChild(top);
+    const uris = cache.tr.slice(0, 100).map(x => x.uri);
+    cache.tr.forEach((x, i) => row({image: img(x.album && x.album.images), title: x.name, sub: artists(x.artists), uri: x.uri, queue: x.uri,
+      onClick: () => i < 100 ? play({uris, offset: {position: i}}) : play({uris: [x.uri]})}));
+  }
+}
+function backBtn() { const b = el('button', 'btn', '◄ ZURÜCK'); b.onclick = () => { const f = stack.pop(); if (f) f(); else openTab(tab); }; return b; }
+function header(o) {
+  const h = el('div', 'head');
+  const i = el('img'); i.alt = ''; if (o.image) i.src = o.image; h.appendChild(i);
+  const info = el('div', 'info'); info.append(el('div', 't', o.title), el('div', 'sub', o.sub || ''));
+  const bx = el('div'); bx.appendChild(backBtn());
+  if (o.play) { const p = el('button', 'btn g', '► PLAY'); p.onclick = o.play; bx.appendChild(p); }
+  info.appendChild(bx); h.appendChild(info); L().appendChild(h);
+}
+async function openPlaylist(p) {
+  L().textContent = ''; L().scrollTop = 0; legend('PLAYLIST');
+  header({image: img(p.images, true), title: p.name, sub: 'von ' + ((p.owner && p.owner.display_name) || '?') + (p.items && p.items.total != null ? ' · ' + p.items.total + ' Titel' : (p.tracks && p.tracks.total != null ? ' · ' + p.tracks.total + ' Titel' : '')),
+    play: () => play({context_uri: p.uri})});
+  const own = me && p.owner && (p.owner.id === me.id || p.collaborative);
+  if (!own) { L().appendChild(el('div', 'msg', 'Spotify zeigt die Titelliste nur für eigene Playlists.\n► PLAY spielt sie trotzdem ab.')); return; }
+  const wait = el('div', 'msg', 'Lade Titel…'); L().appendChild(wait);
+  try {
+    const items = await pages('/playlists/' + p.id + '/items?limit=100', 500);
+    wait.remove();
+    items.forEach((it, i) => { const tr = it.item || it.track; if (!tr || !tr.uri) return;
+      row({image: img(tr.album && tr.album.images), title: tr.name, sub: artists(tr.artists) || (tr.show && tr.show.name) || '', uri: tr.uri, queue: tr.uri,
+        onClick: () => play({context_uri: p.uri, offset: {uri: tr.uri}})}); });
+    if (!items.length) L().appendChild(el('div', 'msg', 'Leer.'));
+  } catch (e) { wait.textContent = 'Titel nicht abrufbar (' + e.message + '). ► PLAY geht trotzdem.'; }
+}
+async function openAlbum(id) {
+  L().textContent = ''; L().scrollTop = 0; legend('ALBUM'); msg('Lade…');
+  try {
+    const a = await api('/albums/' + id);
+    L().textContent = '';
+    header({image: img(a.images, true), title: a.name, sub: artists(a.artists) + (a.release_date ? ' · ' + a.release_date.slice(0, 4) : ''), play: () => play({context_uri: a.uri})});
+    (a.tracks.items || []).forEach((t, i) => row({num: i + 1, title: t.name, sub: mmss(t.duration_ms) + (t.artists && t.artists.length > 1 ? ' · ' + artists(t.artists) : ''), uri: t.uri, queue: t.uri,
+      onClick: () => play({context_uri: a.uri, offset: {uri: t.uri}})}));
+  } catch (e) { msg('Fehler: ' + e.message, true); }
+}
+async function openArtist(ar) {
+  const prev = stack.slice();
+  L().textContent = ''; L().scrollTop = 0; legend('KÜNSTLER'); msg('Lade…');
+  try {
+    const [a, al] = await Promise.all([api('/artists/' + ar.id), api('/artists/' + ar.id + '/albums?include_groups=album,single&limit=20')]);
+    L().textContent = '';
+    header({image: img(a.images, true), title: a.name, sub: (a.genres || []).slice(0, 2).join(', '), play: () => play({context_uri: a.uri})});
+    (al.items || []).forEach(x => row({image: img(x.images), title: x.name, sub: (x.album_type || '') + (x.release_date ? ' · ' + x.release_date.slice(0, 4) : ''), uri: x.uri,
+      onClick: () => { stack.push(() => openArtist(ar)); openAlbum(x.id); }}));
+  } catch (e) { msg('Fehler: ' + e.message, true); }
+}
+$('search').addEventListener('submit', async e => {
+  e.preventDefault(); const q = $('q').value.trim(); if (!q) return; $('q').blur();
+  msg('Suche…');
+  try { cache.se = await api('/search?type=track,album,artist,playlist&limit=10&q=' + encodeURIComponent(q)); renderSearch(cache.se); }
+  catch (er) { msg('Fehler: ' + er.message, true); }
+});
+function renderSearch(r) {
+  L().textContent = ''; L().scrollTop = 0;
+  const sec = t => { const d = el('div', 'msg', '── ' + t + ' ──'); d.style.cssText = 'padding:6px 4px 2px;color:var(--ye)'; L().appendChild(d); };
+  const tr = (r.tracks && r.tracks.items || []).filter(Boolean), al = (r.albums && r.albums.items || []).filter(Boolean),
+        ar = (r.artists && r.artists.items || []).filter(Boolean), pl = (r.playlists && r.playlists.items || []).filter(Boolean);
+  if (tr.length) { sec('TITEL'); tr.forEach(x => row({image: img(x.album && x.album.images), title: x.name, sub: artists(x.artists), uri: x.uri, queue: x.uri,
+    onClick: () => play(x.album ? {context_uri: x.album.uri, offset: {uri: x.uri}} : {uris: [x.uri]})})); }
+  if (ar.length) { sec('KÜNSTLER'); ar.forEach(x => row({image: img(x.images), title: x.name, sub: (x.genres || []).slice(0, 2).join(', '), onClick: () => { stack.push(() => { renderSearch(r); legend('SUCHE'); }); openArtist(x); }})); }
+  if (al.length) { sec('ALBEN'); al.forEach(x => row({image: img(x.images), title: x.name, sub: artists(x.artists), uri: x.uri, onClick: () => { stack.push(() => { renderSearch(r); legend('SUCHE'); }); openAlbum(x.id); }})); }
+  if (pl.length) { sec('PLAYLISTS'); pl.forEach(x => row({image: img(x.images), title: x.name, sub: 'von ' + ((x.owner && x.owner.display_name) || '?'), uri: x.uri, onClick: () => { stack.push(() => { renderSearch(r); legend('SUCHE'); }); openPlaylist(x); }})); }
+  if (!tr.length && !al.length && !ar.length && !pl.length) msg('Nichts gefunden.');
+}
+document.querySelectorAll('#menu button').forEach(b => b.onclick = () => openTab(b.dataset.tab));
+
+/* ---------- Player ---------- */
+let st = null, stAt = 0;
+function dev() { return deviceId ? '&device_id=' + deviceId : ''; }
+function devQ() { return deviceId ? '?device_id=' + deviceId : ''; }
+function playerErr(e) {
+  if (e.reason === 'NO_ACTIVE_DEVICE' || e.status === 404) { pickDevice(true); return; }
+  if (e.reason === 'PREMIUM_REQUIRED' || e.status === 403) { toast('Spotify erlaubt die Steuerung nur mit Premium (oder Aktion nicht möglich).'); return; }
+  toast('Fehler: ' + e.message);
+}
+async function play(body) {
+  try { await api('/me/player/play' + devQ(), {method: 'PUT', body}); setTimeout(poll, 600); setTimeout(poll, 2000); }
+  catch (e) { playerErr(e); }
+}
+async function queueAdd(uri) {
+  try { await api('/me/player/queue?uri=' + encodeURIComponent(uri) + dev(), {method: 'POST'}); toast('Zur Warteschlange hinzugefügt.', true); } catch (e) { playerErr(e); }
+}
+async function cmd(path, method) { try { await api(path, {method}); setTimeout(poll, 400); setTimeout(poll, 1500); } catch (e) { playerErr(e); } }
+$('bPlay').onclick = () => { if (st && st.is_playing) { st.is_playing = false; paintPlayer(); cmd('/me/player/pause' + devQ(), 'PUT'); } else { if (st) { st.is_playing = true; paintPlayer(); } cmd('/me/player/play' + devQ(), 'PUT'); } };
+$('bNext').onclick = () => cmd('/me/player/next' + devQ(), 'POST');
+$('bPrev').onclick = () => cmd('/me/player/previous' + devQ(), 'POST');
+$('bShuf').onclick = () => cmd('/me/player/shuffle?state=' + !(st && st.shuffle_state) + dev(), 'PUT');
+$('bRep').onclick = () => { const n = {off: 'context', context: 'track', track: 'off'}[(st && st.repeat_state) || 'off']; cmd('/me/player/repeat?state=' + n + dev(), 'PUT'); };
+$('npBar').onclick = e => { if (!st || !st.item) return; const r = e.currentTarget.getBoundingClientRect();
+  const pos = Math.round((e.clientX - r.left) / r.width * st.item.duration_ms); st.progress_ms = pos; stAt = Date.now(); paintPlayer(); cmd('/me/player/seek?position_ms=' + pos + dev(), 'PUT'); };
+$('dev').onclick = () => pickDevice(false);
+async function poll() {
+  if (document.hidden || !tok) return;
+  try { st = await api('/me/player?additional_types=episode'); stAt = Date.now(); if (st && st.device) deviceId = st.device.id; paintPlayer(); }
+  catch (e) { /* still */ }
+}
+function paintPlayer() {
+  const it = st && st.item;
+  const uri = it ? it.uri : null;
+  if (uri !== nowUri) { nowUri = uri; document.querySelectorAll('.item').forEach(r => r.classList.toggle('playing', r.dataset.uri === uri)); }
+  if (!it) { $('npT').textContent = 'Nichts läuft'; $('npA').textContent = 'Öffne Spotify einmal & spiele etwas'; $('npImg').classList.add('hidden'); $('npImgPh').classList.remove('hidden');
+    $('bPlay').textContent = '►'; $('dev').textContent = 'GERÄT: ' + (st && st.device ? st.device.name : '– (tippen zum Wählen)'); $('npFill').style.width = '0'; return; }
+  $('npT').textContent = it.name;
+  $('npA').textContent = it.artists ? artists(it.artists) + (it.album ? ' · ' + it.album.name : '') : (it.show ? it.show.name : '');
+  const im = img((it.album && it.album.images) || it.images, true);
+  if (im) { if ($('npImg').src !== im) $('npImg').src = im; $('npImg').classList.remove('hidden'); $('npImgPh').classList.add('hidden'); }
+  $('bPlay').textContent = st.is_playing ? '▌▌' : '►';
+  $('bShuf').classList.toggle('on', !!st.shuffle_state);
+  $('bRep').classList.toggle('on', st.repeat_state !== 'off');
+  $('bRep').textContent = st.repeat_state === 'track' ? '↻1' : '↻';
+  $('dev').textContent = 'GERÄT: ' + (st.device ? st.device.name + (st.device.volume_percent != null ? '  VOL ' + st.device.volume_percent + '%' : '') : '–');
+  tickProgress();
+}
+function tickProgress() {
+  const it = st && st.item; if (!it) return;
+  let p = st.progress_ms + (st.is_playing ? Date.now() - stAt : 0);
+  if (p > it.duration_ms) { p = it.duration_ms; if (st.is_playing && Date.now() - stAt > 1500) { stAt = Date.now() + 99999; setTimeout(poll, 800); } }
+  $('npPos').textContent = mmss(p); $('npDur').textContent = mmss(it.duration_ms);
+  $('npFill').style.width = (p / it.duration_ms * 100).toFixed(1) + '%';
+}
+setInterval(tickProgress, 1000);
+setInterval(poll, 5000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+async function pickDevice(auto) {
+  try {
+    const d = await api('/me/player/devices');
+    const list = (d && d.devices) || [];
+    if (!list.length) { toast('Kein Gerät gefunden. Öffne Spotify auf dem iPhone und tippe dort kurz auf Play.'); return; }
+    if (auto && list.length === 1) { deviceId = list[0].id; await api('/me/player', {method: 'PUT', body: {device_ids: [deviceId], play: false}}).catch(() => {}); toast('Gerät gewählt: ' + list[0].name + '. Nochmal tippen.', true); poll(); return; }
+    // einfache Auswahl in der Liste
+    stack.push(() => openTab(tab));
+    L().textContent = ''; legend('GERÄT WÄHLEN'); L().appendChild(backBtn());
+    list.forEach(x => row({title: x.name + (x.is_active ? '  ◄ aktiv' : ''), sub: x.type + (x.volume_percent != null ? ' · Vol ' + x.volume_percent + '%' : ''),
+      onClick: async () => { deviceId = x.id; try { await api('/me/player', {method: 'PUT', body: {device_ids: [x.id], play: !!(st && st.is_playing)}}); toast('Gewechselt zu ' + x.name, true); } catch (e) { playerErr(e); } openTab(tab); setTimeout(poll, 800); }}));
+  } catch (e) { toast('Fehler: ' + e.message); }
+}
+
+/* ---------- Start ---------- */
+$('ruri').textContent = REDIRECT;
+$('copyUri').onclick = () => copy(REDIRECT);
+$('cid').value = lget(LS.cid) || '';
+$('connect').onclick = login;
+$('tokenBtn').onclick = () => importCode($('tokenIn').value);
+$('copyCode').onclick = () => copy($('codeOut').textContent);
+$('goApp').onclick = () => start();
+async function start() {
+  show('main');
+  try { me = await api('/me'); $('who').textContent = 'MUSIK.EXE · ' + (me.display_name || me.id).toUpperCase(); }
+  catch (e) { if (!tok) return; toast('Verbindung fehlgeschlagen: ' + e.message); }
+  openTab('pl'); poll();
+}
+(async () => {
+  if (await handleCallback()) return;
+  if (tok && tok.r) start(); else show('setup');
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {} }
+</script>
+</body>
+</html>
